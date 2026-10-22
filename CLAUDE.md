@@ -5,8 +5,9 @@
 A fork of [sirrobot01/decypharr](https://github.com/sirrobot01/decypharr) that exists to
 build our own Decypharr image. Branch `main-patched` is
 [h1n054ur/decypharr](https://github.com/h1n054ur/decypharr) `main-patched` **frozen at
-`caca7380`** (upstream v2.7 plus the fixes `FORK.md` lists), plus our commits on top.
-`main` and the other branches are upstream's, untouched.
+`caca7380`** (upstream v2.7 plus the fixes `FORK.md` lists), plus our image workflow on top.
+The code under `pkg/` is identical to `caca7380`. `main` and the other branches are
+upstream's, untouched.
 
 ## Build and deploy
 
@@ -17,21 +18,15 @@ build our own Decypharr image. Branch `main-patched` is
   publishes upstream's artifacts. Keep it that way.
 - Deployments pin the image **by digest**, never by tag. Where it runs and how to roll back is
   in the operator's own documentation, not here.
-- Current image: tag `v2.7-patched-aa2` = commit `87a049f`. The previous one, `v2.7-patched-aa1`
-  (`3389f0e`), is the rollback.
+- Current image: tag `v2.7-patched-aa1` = commit `3389f0e`.
 
 ## Our own commits on top of `caca7380`
 
-- `3389f0e` ci: our GHCR image workflow.
-- `87a049f` fix(arr): queue-cleanup rules also match the Arr queue item's `errorMessage`.
-  Sonarr and Radarr put a download client's error ("qBittorrent is reporting an error") there
-  and leave `statusMessages` empty, so before this no rule could match those items. Not offered
-  upstream yet. **Incomplete:** `resolveQueueAction` still skips these items before matching,
-  because the Arrs report them with `status` warning and `trackedDownloadStatus` ok, and it only
-  looks at `trackedDownloadStatus`. The unit test built the item with `trackedDownloadStatus`
-  warning, which is why it passed. The deployment now refuses uncached adds instead, so this is
-  parked; finishing it means also accepting `status` warning, with a test built from a real
-  queue item.
+- `3389f0e` ci: our GHCR image workflow. The only change that matters.
+- `87a049f` and its revert `87aa739`: a queue-cleanup change that never took effect; reverted
+  so the code matches `caca7380`. Its tag `v2.7-patched-aa2` was deleted. Don't re-apply it:
+  the Arrs report a download client's error with `trackedDownloadStatus` ok, which queue
+  cleanup skips before matching, so a fix would also have to accept `status` warning.
 
 ## Conventions
 
@@ -39,7 +34,7 @@ build our own Decypharr image. Branch `main-patched` is
   commits means: compare them against upstream (`gh api repos/sirrobot01/decypharr/compare/<base>...h1n054ur:decypharr:main-patched`),
   check each cherry-pick exists upstream with the same changes and each "(upstream #N)"
   squash matches that PR's diff, read every commit of the fork author's own, then rebase this
-  branch, run the tests, and push a new `v*-aa<N+1>` tag.
+  branch, run the tests, and push a new `v*-aa<N>` tag (the next free number is 3).
 - Once upstream releases a version containing the #434 fix (PR #450), the plan is to return
   to the stock upstream image and retire this fork.
 - No lab-specific data (hosts, addresses, names) in this public repo.
@@ -47,11 +42,11 @@ build our own Decypharr image. Branch `main-patched` is
 ## Test
 
 ```sh
-go test ./pkg/manager/link/ ./pkg/server/qbit/ ./pkg/debrid/providers/torbox/ ./pkg/arr/
+go test ./pkg/manager/link/ ./pkg/server/qbit/ ./pkg/debrid/providers/torbox/
 ```
 
-These cover the patched link validation (#450), qBittorrent hash handling, TorBox naming and
-queue-cleanup matching. They pass on `87a049f`. A full `go test ./...` needs the CGO/FUSE toolchain the
+These cover the patched link validation (#450), qBittorrent hash handling and TorBox
+naming. They pass on `3389f0e`. A full `go test ./...` needs the CGO/FUSE toolchain the
 `Dockerfile` installs.
 
 ## Open items
