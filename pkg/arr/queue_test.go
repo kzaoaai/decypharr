@@ -7,8 +7,6 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
-
-	"github.com/sirrobot01/decypharr/internal/config"
 )
 
 func TestCleanupQueueImportsEachDownloadOnce(t *testing.T) {
@@ -40,29 +38,5 @@ func TestCleanupQueueImportsEachDownloadOnce(t *testing.T) {
 	}
 	if got := lookups.Load(); got != 1 {
 		t.Fatalf("manual import lookups = %d, want 1", got)
-	}
-}
-
-func TestResolveQueueActionMatchesErrorMessage(t *testing.T) {
-	// A torrent the debrid provider gave up on reaches the Arr as a
-	// qBittorrent error state: the text is in errorMessage, statusMessages is
-	// empty.
-	item := QueueSchema{
-		Status:                "warning",
-		TrackedDownloadStatus: "warning",
-		TrackedDownloadState:  "downloading",
-		ErrorMessage:          "qBittorrent is reporting an error",
-	}
-	rules := []config.QueueCleanupRule{{Match: "qBittorrent is reporting an error", Action: string(QueueActionBlocklistResearch)}}
-
-	if got := resolveQueueAction(item, rules); got != QueueActionBlocklistResearch {
-		t.Fatalf("resolveQueueAction() = %q, want %q", got, QueueActionBlocklistResearch)
-	}
-	if got := resolveQueueAction(item, nil); got != QueueActionNone {
-		t.Fatalf("resolveQueueAction() without rules = %q, want none", got)
-	}
-	item.TrackedDownloadStatus = "ok"
-	if got := resolveQueueAction(item, rules); got != QueueActionNone {
-		t.Fatalf("resolveQueueAction() on an ok item = %q, want none", got)
 	}
 }

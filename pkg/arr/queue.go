@@ -43,9 +43,6 @@ type QueueSchema struct {
 		Title    string   `json:"title"`
 		Messages []string `json:"messages"`
 	} `json:"statusMessages"`
-	// ErrorMessage carries the download client's own error, e.g. "qBittorrent
-	// is reporting an error", which the Arr does not repeat in StatusMessages.
-	ErrorMessage                        string `json:"errorMessage"`
 	DownloadId                          string `json:"downloadId"`
 	Protocol                            string `json:"protocol"`
 	DownloadClient                      string `json:"downloadClient"`
@@ -58,7 +55,7 @@ type QueueSchema struct {
 
 // catalogMatchers are the predicates for the built-in cleanup rules, keyed by
 // config.QueueCleanupRule.ID. text is the lowercased join of a queue item's
-// error message and its status message titles and messages.
+// status message titles and messages.
 var catalogMatchers = map[string]func(item QueueSchema, text string) bool{
 	"failed_download": func(item QueueSchema, _ string) bool {
 		return strings.EqualFold(item.Status, "failed")
@@ -171,10 +168,6 @@ func resolveQueueAction(item QueueSchema, rules []config.QueueCleanupRule) Queue
 	}
 
 	var builder strings.Builder
-	if item.ErrorMessage != "" {
-		builder.WriteString(item.ErrorMessage)
-		builder.WriteByte(' ')
-	}
 	for _, message := range item.StatusMessages {
 		builder.WriteString(message.Title)
 		builder.WriteByte(' ')
