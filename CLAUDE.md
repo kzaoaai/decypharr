@@ -26,7 +26,12 @@ build our own Decypharr image. Branch `main-patched` is
 - `87a049f` fix(arr): queue-cleanup rules also match the Arr queue item's `errorMessage`.
   Sonarr and Radarr put a download client's error ("qBittorrent is reporting an error") there
   and leave `statusMessages` empty, so before this no rule could match those items. Not offered
-  upstream yet.
+  upstream yet. **Incomplete:** `resolveQueueAction` still skips these items before matching,
+  because the Arrs report them with `status` warning and `trackedDownloadStatus` ok, and it only
+  looks at `trackedDownloadStatus`. The unit test built the item with `trackedDownloadStatus`
+  warning, which is why it passed. The deployment now refuses uncached adds instead, so this is
+  parked; finishing it means also accepting `status` warning, with a test built from a real
+  queue item.
 
 ## Conventions
 
