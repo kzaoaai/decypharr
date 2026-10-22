@@ -17,7 +17,16 @@ build our own Decypharr image. Branch `main-patched` is
   publishes upstream's artifacts. Keep it that way.
 - Deployments pin the image **by digest**, never by tag. Where it runs and how to roll back is
   in the operator's own documentation, not here.
-- Current image: tag `v2.7-patched-aa1` = commit `3389f0e`.
+- Current image: tag `v2.7-patched-aa2` = commit `87a049f`. The previous one, `v2.7-patched-aa1`
+  (`3389f0e`), is the rollback.
+
+## Our own commits on top of `caca7380`
+
+- `3389f0e` ci: our GHCR image workflow.
+- `87a049f` fix(arr): queue-cleanup rules also match the Arr queue item's `errorMessage`.
+  Sonarr and Radarr put a download client's error ("qBittorrent is reporting an error") there
+  and leave `statusMessages` empty, so before this no rule could match those items. Not offered
+  upstream yet.
 
 ## Conventions
 
@@ -33,11 +42,11 @@ build our own Decypharr image. Branch `main-patched` is
 ## Test
 
 ```sh
-go test ./pkg/manager/link/ ./pkg/server/qbit/ ./pkg/debrid/providers/torbox/
+go test ./pkg/manager/link/ ./pkg/server/qbit/ ./pkg/debrid/providers/torbox/ ./pkg/arr/
 ```
 
-These cover the patched link validation (#450), qBittorrent hash handling and TorBox
-naming. They pass on `3389f0e`. A full `go test ./...` needs the CGO/FUSE toolchain the
+These cover the patched link validation (#450), qBittorrent hash handling, TorBox naming and
+queue-cleanup matching. They pass on `87a049f`. A full `go test ./...` needs the CGO/FUSE toolchain the
 `Dockerfile` installs.
 
 ## Open items
